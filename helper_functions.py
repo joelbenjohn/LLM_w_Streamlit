@@ -12,7 +12,21 @@ def guess_context(text):
     context = "..."
     return context
 
-# Function to summarize text
+def chunk_transcript(transcript: List[dict], time_gap: int) -> List[str]:
+    """Function to split transcript into chunks based on time gap"""
+    chunks = []
+    chunk = ''
+    last_end_time = transcript[0]['start']
+    for section in transcript:
+        if section['start'] - last_end_time > time_gap:
+            chunks.append(chunk)
+            chunk = section['text']
+        else:
+            chunk += ' ' + section['text']
+        last_end_time = section['start'] + section['duration']
+    chunks.append(chunk)  # Don't forget the last chunk
+    return chunks
+    
 def summarize(api_key: str, chunks: List[str]) -> List[str]:
     """Function to summarize chunks using OpenAI's GPT-4"""
     summaries = []
