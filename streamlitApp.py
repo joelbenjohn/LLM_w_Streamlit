@@ -6,7 +6,7 @@ def main():
     api_key = st.text_input("Enter OpenAI API key")
     video_id = st.text_input("Enter YouTube video ID:")
     time_gap = st.number_input("Enter Time Resolution of Summary", default = 10.0)
-    if video_id:
+    if video_id and api_key:
         transcript = get_transcript(video_id)  # You need to write the get_transcript function.
         chunks = chunk_transcript(transcript, time_gap)
         summary = summarize(api_key, chunks)  # You need to write the summarize function.
