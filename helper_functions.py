@@ -13,39 +13,62 @@ def guess_context(text):
     return context
 
 # Function to summarize text
-def summarize_text(text):
-    # Use ChatGPT API here to summarize the text
-    summary = "..."
-    return summary
+def summarize(api_key: str, chunks: List[str]) -> List[str]:
+    """Function to summarize chunks using OpenAI's GPT-4"""
+    summaries = []
+    openai.api_key = api_key
+
+    for chunk in chunks:
+        response = openai.Completion.create(
+          engine="text-davinci-002",
+          prompt=chunk,
+          temperature=0.3,
+          max_tokens=100
+        )
+        summaries.append(response.choices[0].text.strip())
+    return summaries
+
 
 # Fetch the transcript
-video_id = '883R3JlZHXE'
-transcript = YouTubeTranscriptApi.get_transcript(video_id)
+# video_id = '883R3JlZHXE'
 
-# Initialize the blockchain
-blockchain = []
+def makeContentChain(video_id)
 
-# Iterate over the transcript
-for i in range(len(transcript)):
-    # Get the current element
-    current_element = transcript[i]
-
-    # Guess the speaker and the context
-    speaker = guess_speaker(current_element['text'])
-    context = guess_context(current_element['text'])
-
-    # If the blockchain is not empty
-    if blockchain:
-        # Get the last block in the blockchain
-        last_block = blockchain[-1]
-
-        # If the speaker and the context are the same as the last block
-        if speaker == last_block['speaker'] and context == last_block['context']:
-            # Append the current element to the last block
-            last_block['text'] += ' ' + current_element['text']
-            last_block['summary'] = summarize_text(last_block['text'])
+    transcript = YouTubeTranscriptApi.get_transcript(video_id)
+    
+    # Initialize the blockchain
+    blockchain = []
+    
+    # Iterate over the transcript
+    for i in range(len(transcript)):
+        # Get the current element
+        current_element = transcript[i]
+    
+        # Guess the speaker and the context
+        speaker = guess_speaker(current_element['text'])
+        context = guess_context(current_element['text'])
+    
+        # If the blockchain is not empty
+        if blockchain:
+            # Get the last block in the blockchain
+            last_block = blockchain[-1]
+    
+            # If the speaker and the context are the same as the last block
+            if speaker == last_block['speaker'] and context == last_block['context']:
+                # Append the current element to the last block
+                last_block['text'] += ' ' + current_element['text']
+                last_block['summary'] = summarize_text(last_block['text'])
+            else:
+                # Create a new block and add it to the blockchain
+                block = {
+                    'speaker': speaker,
+                    'context': context,
+                    'text': current_element['text'],
+                    'summary': summarize_text(current_element['text'])
+                }
+                blockchain.append(block)
         else:
-            # Create a new block and add it to the blockchain
+            # If the blockchain is empty, create the first block
             block = {
                 'speaker': speaker,
                 'context': context,
@@ -53,16 +76,7 @@ for i in range(len(transcript)):
                 'summary': summarize_text(current_element['text'])
             }
             blockchain.append(block)
-    else:
-        # If the blockchain is empty, create the first block
-        block = {
-            'speaker': speaker,
-            'context': context,
-            'text': current_element['text'],
-            'summary': summarize_text(current_element['text'])
-        }
-        blockchain.append(block)
-
-# Print the blockchain
-for block in blockchain:
-    print(block)
+    return blockchain
+    # # Print the blockchain
+    # for block in blockchain:
+    #     print(block)
