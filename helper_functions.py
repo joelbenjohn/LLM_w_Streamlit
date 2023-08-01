@@ -46,7 +46,7 @@ def summarize(api_key: str, chunks: List[str]) -> List[str]:
 # Fetch the transcript
 # video_id = '883R3JlZHXE'
 
-def makeContentChain(video_id)
+def makeContentChain(video_id):
 
     transcript = YouTubeTranscriptApi.get_transcript(video_id)
     
