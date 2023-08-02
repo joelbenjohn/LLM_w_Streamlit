@@ -1,4 +1,8 @@
 from youtube_transcript_api import YouTubeTranscriptApi
+import openai
+from typing import List
+import time
+
 
 # Function to guess the speaker based on the text
 def guess_speaker(text):
@@ -15,17 +19,22 @@ def guess_context(text):
 def chunk_transcript(transcript: List[dict], time_gap: int) -> List[str]:
     """Function to split transcript into chunks based on time gap"""
     chunks = []
+    token_sizes = []
     chunk = ''
-    last_end_time = transcript[0]['start']
+    transcript = transcript.fetch()
+    print(transcript, type(transcript))
+    last_end_time = 0.0
     for section in transcript:
+        # print(section['start'])
         if section['start'] - last_end_time > time_gap:
-            chunks.append(chunk)
+            chunks.append([chunk, section['start']])
+            token_sizes.append(len(chunk))
             chunk = section['text']
         else:
             chunk += ' ' + section['text']
         last_end_time = section['start'] + section['duration']
-    chunks.append(chunk)  # Don't forget the last chunk
-    return chunks
+    chunks.append([chunk, last_end_time])  # Don't forget the last chunk
+    return chunks, token_sizes
     
 def summarize(api_key: str, chunks: List[str]) -> List[str]:
     """Function to summarize chunks using OpenAI's GPT-4"""
@@ -33,15 +42,37 @@ def summarize(api_key: str, chunks: List[str]) -> List[str]:
     openai.api_key = api_key
 
     for chunk in chunks:
-        response = openai.Completion.create(
-          engine="text-davinci-002",
-          prompt=chunk,
-          temperature=0.3,
-          max_tokens=100
-        )
+        chunk = chunk[0]
+        try:
+            response = openai.Completion.create(
+            engine="text-davinci-002",
+            prompt='Summarize this passage for me : {chunk}',
+            temperature=0.3,
+            max_tokens=100
+            )
+        except openai.error.Timeout as e:
+            # If rate limit error, sleep until the rate limits reset
+            time_to_sleep = e.reset - time.time()
+            time.sleep(time_to_sleep)
+
+            # Try the request again
+            response = openai.Completion.create(
+            engine="text-davinci-002",
+            prompt=chunk,
+            temperature=0.3,
+            max_tokens=100
+            )
         summaries.append(response.choices[0].text.strip())
     return summaries
 
+def get_transcript(video_id):
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id.split('?v=')[-1])
+    except:
+        transcript = False
+    transcript_list = YouTubeTranscriptApi.list_transcripts(video_id.split('?v=')[-1])
+
+    return transcript, transcript_list
 
 # Fetch the transcript
 # video_id = '883R3JlZHXE'
