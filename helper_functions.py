@@ -23,17 +23,20 @@ def chunk_transcript(transcript: List[dict], time_gap: int) -> List[str]:
     chunk = ''
     transcript = transcript.fetch()
     print(transcript, type(transcript))
-    last_end_time = 0.0
+    last_start_time = -time_gap
     for section in transcript:
         # print(section['start'])
-        if section['start'] - last_end_time > time_gap:
-            chunks.append([chunk, section['start']])
+        if section['start'] - last_start_time >= time_gap:
+            last_start_time = section['start']
+            chunks.append([chunk, last_start_time])
+            
             token_sizes.append(len(chunk))
             chunk = section['text']
         else:
             chunk += ' ' + section['text']
-        last_end_time = section['start'] + section['duration']
-    chunks.append([chunk, last_end_time])  # Don't forget the last chunk
+        # last_end_time = section['start'] + section['duration']
+    print(section['start'], section['text'])
+    chunks.append([chunk, last_start_time])  # Don't forget the last chunk
     return chunks, token_sizes
     
 def summarize(api_key: str, chunks: List[str]) -> List[str]:
