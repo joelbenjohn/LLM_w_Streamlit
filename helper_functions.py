@@ -21,8 +21,8 @@ def chunk_transcript(transcript: List[dict], time_gap: int) -> List[str]:
     chunks = []
     token_sizes = []
     chunk = ''
-    transcript = transcript.fetch()
-    print(transcript, type(transcript))
+    # transcript = transcript.fetch()
+    # print(transcript, type(transcript))
     last_start_time = -time_gap
     for section in transcript:
         # print(section['start'])
